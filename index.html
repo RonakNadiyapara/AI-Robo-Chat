@@ -1,0 +1,534 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Robo Chat</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+:root {
+  --main: #5350c4;
+  --blue: #2563eb;
+  --chat: #f8f9ff;
+  --bot: #e9ebff;
+  --text: #17172b;
+  --white: #fff;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 10% 20%, #c7d2fe, transparent 25%),
+    radial-gradient(circle at 90% 80%, #ddd6fe, transparent 25%),
+    linear-gradient(135deg, #eef2ff, #e0e7ff);
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+}
+
+.chat {
+  width: 500px;
+  height: min(720px, calc(100vh - 30px));
+  min-height: 450px;
+  background: rgba(255,255,255,.92);
+  border: 1px solid white;
+  border-radius: 25px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 70px #4f46e544;
+}
+
+.header {
+  min-height: 82px;
+  padding: 15px 20px;
+  color: white;
+  background: linear-gradient(135deg, var(--main), var(--blue));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.bot-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  background: white;
+  color: var(--main);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 27px;
+}
+
+.header h2 {
+  font-size: 20px;
+}
+
+.status {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #d9ffe7;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #ffffff55;
+  background: #ffffff18;
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.messages {
+  flex: 1;
+  min-height: 0;
+  padding: 22px;
+  overflow-y: auto;
+  background: var(--chat);
+  scroll-behavior: smooth;
+}
+
+.welcome {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.welcome-icon {
+  font-size: 38px;
+  margin-bottom: 8px;
+}
+
+.welcome h3 {
+  font-size: 18px;
+}
+
+.welcome p {
+  color: #777;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.msg {
+  max-width: 82%;
+  padding: 12px 16px;
+  margin: 12px 0;
+  border-radius: 17px;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  animation: appear .25s ease;
+}
+
+@keyframes appear {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bot {
+  background: var(--bot);
+  color: var(--text);
+  border-bottom-left-radius: 5px;
+}
+
+.user {
+  margin-left: auto;
+  background: linear-gradient(135deg, var(--main), var(--blue));
+  color: white;
+  border-bottom-right-radius: 5px;
+}
+
+.typing {
+  width: 65px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.typing span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #777;
+  animation: bounce .7s infinite alternate;
+}
+
+.typing span:nth-child(2) { animation-delay: .15s; }
+.typing span:nth-child(3) { animation-delay: .3s; }
+
+@keyframes bounce {
+  to { transform: translateY(-5px); opacity: .35; }
+}
+
+.quick {
+  padding: 8px 15px 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: var(--chat);
+}
+
+.quick button {
+  border: 1px solid #cbd5ff;
+  background: white;
+  color: #4f46e5;
+  padding: 8px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.quick button:hover {
+  background: var(--main);
+  color: white;
+}
+
+.footer {
+  padding: 13px;
+  display: flex;
+  gap: 10px;
+  border-top: 1px solid #e5e7eb;
+  background: white;
+}
+
+.input-box {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid #d5d8eb;
+  border-radius: 28px;
+}
+
+input {
+  width: 100%;
+  padding: 13px 16px;
+  border: 0;
+  outline: 0;
+  border-radius: 28px;
+  font-size: 14px;
+  background: transparent;
+  color: inherit;
+}
+
+.send {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 50%;
+  color: white;
+  background: linear-gradient(135deg, var(--main), var(--blue));
+  cursor: pointer;
+  font-size: 19px;
+}
+
+button:disabled,
+input:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+/* DARK MODE */
+
+.dark {
+  --chat: #11152a;
+  --bot: #202642;
+  --text: #f5f7ff;
+}
+
+.dark body {
+  background: radial-gradient(circle, #312e81, #080b18);
+}
+
+.dark .chat {
+  background: #101426;
+  border-color: #292e48;
+}
+
+.dark .quick,
+.dark .messages {
+  background: var(--chat);
+}
+
+.dark .quick button {
+  background: #1c223b;
+  color: #c5caff;
+  border-color: #373d62;
+}
+
+.dark .footer {
+  background: #101426;
+  border-color: #292e48;
+}
+
+.dark .input-box {
+  background: #1c223b;
+  border-color: #373d62;
+}
+
+.dark input {
+  color: white;
+}
+
+.dark input::placeholder {
+  color: #aaa;
+}
+
+@media (max-width: 550px) {
+  body {
+    padding: 0;
+  }
+
+  .chat {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    border-radius: 0;
+  }
+
+  .messages {
+    padding: 17px;
+  }
+
+  .msg {
+    max-width: 88%;
+  }
+}
+</style>
+</head>
+
+<body>
+<div class="chat">
+
+  <header class="header">
+    <div class="bot-info">
+      <div class="avatar">🤖</div>
+      <div>
+        <h2>AI Robo Chat</h2>
+        <div class="status">● Online</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="icon" onclick="toggleTheme()"
+        title="Change theme" aria-label="Change theme">☀</button>
+      <button class="icon" onclick="restart()"
+        title="Restart chat" aria-label="Restart chat">↻</button>
+    </div>
+  </header>
+
+  <div class="messages" id="messages" aria-live="polite">
+    <div class="welcome">
+      <div class="welcome-icon">🤖</div>
+      <h3>Welcome to AI Robo!</h3>
+    </div>
+  </div>
+
+  <div class="quick" id="quick">
+    <button onclick="quickAnswer('Ronak')">Ronak</button>
+    <button onclick="quickAnswer('Silver Oak University')">Silver Oak</button>
+    <button onclick="quickAnswer('Computer Engineering')">CE</button>
+  </div>
+
+  <div class="footer">
+    <div class="input-box">
+      <input id="input" placeholder="Type your answer..."
+        autocomplete="off" aria-label="Your message"
+        onkeydown="if(event.key==='Enter') sendMessage()">
+    </div>
+    <button class="send" id="send" onclick="sendMessage()"
+      aria-label="Send message">➤</button>
+  </div>
+</div>
+
+<script>
+const messages = document.getElementById("messages");
+const input = document.getElementById("input");
+const quick = document.getElementById("quick");
+const sendButton = document.getElementById("send");
+
+let step = 0;
+let data = {};
+let busy = false;
+let finished = false;
+let replyTimer;
+
+const questions = [
+  { key: "name", question: "Hi! 👋 What is your name?",
+    reply: v => `Nice to meet you, ${v}! 😊 Which college do you go to?` },
+  { key: "college", question: "Which college do you go to?",
+    reply: v => `Nice! 🎓 What is your subject?` },
+  { key: "subject", question: "What is your subject?",
+    reply: v => `Good! 📚 Do you like coding?` },
+  { key: "coding", question: "Do you like coding?",
+    reply: v => `Great! 💻 Which programming language do you like?` },
+  { key: "language", question: "Which programming language do you like?",
+    reply: v => `Nice choice! 👍 What is your project?` },
+  { key: "project", question: "What is your project?",
+    reply: v => `Cool! 🚀 What is your project used for?` },
+  { key: "projectFor", question: "What is your project used for?",
+    reply: v => `Okay! 😊 Does your project use an AI API?` },
+  { key: "api", question: "Does your project use an AI API?",
+    reply: v => `Got it! Is your project free to use?` },
+  { key: "free", question: "Is your project free to use?",
+    reply: v => `Thank you, ${data.name}! 🤖 Now I know more about you and your project.` }
+];
+
+function addMessage(text, type) {
+  const msg = document.createElement("div");
+  msg.className = "msg " + type;
+  msg.textContent = text;
+  messages.appendChild(msg);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function showTyping() {
+  const loader = document.createElement("div");
+  loader.id = "typing";
+  loader.className = "msg bot typing";
+  loader.setAttribute("aria-label", "Robo is typing");
+
+  for (let i = 0; i < 3; i++) {
+    loader.appendChild(document.createElement("span"));
+  }
+
+  messages.appendChild(loader);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function updateControls() {
+  input.disabled = busy || finished;
+  sendButton.disabled = busy || finished;
+  input.placeholder = finished
+    ? "Conversation completed — restart to chat"
+    : "Type your answer...";
+  quick.style.display = finished ? "none" : "flex";
+}
+
+function sendMessage() {
+  if (busy || finished) return;
+
+  const answer = input.value.trim();
+  if (!answer) return;
+
+  addMessage(answer, "user");
+  input.value = "";
+  quick.style.display = "none";
+
+  const current = questions[step];
+  data[current.key] = answer;
+
+  busy = true;
+  updateControls();
+  showTyping();
+
+  replyTimer = setTimeout(() => {
+    const loader = document.getElementById("typing");
+    if (loader) loader.remove();
+
+    addMessage(current.reply(answer), "bot");
+    step++;
+
+    if (step >= questions.length) {
+      finished = true;
+      addMessage("Your conversation is complete! Press ↻ to start again. 😊", "bot");
+    } else {
+      // Show suitable quick answers for the current question.
+      quick.innerHTML = "";
+      const suggestions = step === 1
+        ? ["Silver Oak University", "Other"]
+        : step === 2
+        ? ["Computer Engineering", "Other"]
+        : step === 3
+        ? ["Yes", "No"]
+        : step === 4
+        ? ["JavaScript", "Python", "Java"]
+        : step === 6
+        ? ["College project", "Learning"]
+        : step === 7
+        ? ["Yes", "No", "Planned"]
+        : step === 8
+        ? ["Yes", "No"]
+        : [];
+
+      suggestions.forEach(value => {
+        const button = document.createElement("button");
+        button.textContent = value;
+        button.addEventListener("click", () => quickAnswer(value));
+        quick.appendChild(button);
+      });
+      quick.style.display = suggestions.length ? "flex" : "none";
+    }
+
+    busy = false;
+    updateControls();
+    if (!finished) input.focus();
+  }, 700);
+}
+
+function quickAnswer(answer) {
+  if (busy || finished) return;
+  input.value = answer;
+  sendMessage();
+}
+
+function toggleTheme() {
+  document.documentElement.classList.toggle("dark");
+}
+
+function restart() {
+  clearTimeout(replyTimer);
+  step = 0;
+  data = {};
+  busy = false;
+  finished = false;
+
+  messages.innerHTML = `
+    <div class="welcome">
+      <div class="welcome-icon">🤖</div>
+      <h3>Welcome to AI Robo!</h3>
+    </div>
+  `;
+
+  addMessage(questions[0].question, "bot");
+  quick.innerHTML = "";
+
+  ["Ronak", "Your name"].forEach(value => {
+    const button = document.createElement("button");
+    button.textContent = value;
+    button.addEventListener("click", () => quickAnswer(value));
+    quick.appendChild(button);
+  });
+
+  input.value = "";
+  updateControls();
+}
+
+restart();
+</script>
+</body>
+</html>
